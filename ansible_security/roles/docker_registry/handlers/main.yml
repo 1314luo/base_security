@@ -1,0 +1,5 @@
+---
+- name: restart registry container
+  docker_container:
+    name: registry
+    restart: true

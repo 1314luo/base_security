@@ -1,0 +1,7 @@
+#####################################
+# anisble managed from custom hosts #
+#####################################
+
+{% for hostname, ip in etc_hosts.items() %}
+{{ ip }} {{ hostname }}
+{% endfor %}

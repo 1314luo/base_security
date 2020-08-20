@@ -1,0 +1,13 @@
+---
+- name: check whether firewalld.service exist
+  stat:
+    path: /usr/lib/systemd/system/firewalld.service
+  register: check_firewalld_service
+
+- name: disable firewalld service
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+  when:
+    - check_firewalld_service.stat.exists

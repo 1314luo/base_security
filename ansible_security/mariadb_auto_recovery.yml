@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  vars:
+    enable_mariadbops: true
+  tasks:
+    - name: mariadb recovery
+      import_role:
+        name: mariadb_recovery
+      tags:
+        - mariadbops
+

@@ -1,0 +1,20 @@
+---
+- name: install docker-ce package
+  yum:
+    name:
+      - docker-ce
+      - python2-docker
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+
+- name: config docker-ce
+  import_tasks: config.yml
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: ensure docker service is enabled and started
+  systemd:
+    name: docker
+    state: started
+    enabled: true

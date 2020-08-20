@@ -1,0 +1,23 @@
+---
+- name: install python-opsbackupclient
+  command: "find {{ package_path }} -maxdepth 1 -type f -name 'python-opsbackupclient*.tar.gz'"
+  changed_when: false
+  register: find_backupclient
+
+- name: failed when can not find python-opsbackupclient
+  fail:
+    msg: "Can not found python-opsbackupclient in {{ package_path }} folder"
+  when:
+    - find_backupclient.stdout_lines|length == 0
+
+- name: set python-opsbackupclient path
+  set_fact:
+    backupclient_path: "{{ find_backupclient.stdout_lines[-1] }}"
+
+- name: install the python-opsbackupclient project into system
+  command: "pip install -U --no-deps {{ backupclient_path }}"
+
+- name: copy backup groups for ansible inventory
+  template:
+    src: groups
+    dest: /etc/ansible/hosts/50-backup-groups

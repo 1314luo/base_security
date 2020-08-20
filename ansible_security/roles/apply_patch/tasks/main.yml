@@ -1,0 +1,5 @@
+---
+
+- import_tasks: "osc_lib.yml"
+
+- import_tasks: "ansible.yml"

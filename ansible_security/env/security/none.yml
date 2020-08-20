@@ -1,0 +1,11 @@
+# permit root login
+permit_root_login: "yes"
+
+# host allow
+hosts_allow: []
+
+# host deny
+hosts_deny: []
+
+# ssh timeout
+ssh_timeout: ""

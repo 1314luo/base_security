@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+127.0.0.1 localhost localhost4
+::1       localhost localhost6
+
+{% include "hosts_inventory.j2" %}
+
+{% include "hosts_custom.j2" %}

@@ -1,0 +1,10 @@
+---
+- name: create httprepo.repo file
+  copy:
+    content: |
+      [local]
+      name=local repo from http
+      baseurl=http://{{ undercloud_ip | ipwrap }}:{{ http_port }}/repo
+      enabled=0
+      gpgcheck=0
+    dest: /etc/yum.repos.d/local.repo

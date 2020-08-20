@@ -1,0 +1,71 @@
+---
+- name: install kolla-ansible
+  command: "find {{ package_path }} -maxdepth 1 -type f  -name 'kolla-ansible*.tar.gz'"
+  changed_when: false
+  register: find_kolla_ansible
+
+- name: failed when can not find kolla-ansible
+  fail:
+    msg: "Can not found kolla-ansible in {{ package_path }} folder"
+  when:
+    - find_kolla_ansible.stdout_lines|length == 0
+
+- name: set kolla-ansible path
+  set_fact:
+    kolla_ansible_path: "{{ find_kolla_ansible.stdout_lines[-1] }}"
+
+- name: install the kolla-ansible project into system
+  command: "pip install -U --no-deps {{ kolla_ansible_path }}"
+
+# prepare /etc/kolla files
+- name: ensure /etc/kolla folder
+  file:
+    path: /etc/kolla
+    state: directory
+
+- name: ensure /etc/kolla/config folder
+  file:
+    path: /etc/kolla/config
+    state: directory
+
+- name: check /etc/kolla/globals.yml file
+  stat:
+    path: /etc/kolla/globals.yml
+  register: check_globals_yml
+
+- name: copy kolla groups for ansible
+  template:
+    src: kolla-groups
+    dest: /etc/ansible/hosts/50-kolla-groups
+
+- name: copy globals.yml file
+  template:
+    src: globals.yml.j2
+    dest: /etc/kolla/globals.yml
+    variable_start_string: "[["
+    variable_end_string: "]]"
+    block_start_string: "[%"
+    block_end_string: "%]"
+  when:
+    - not check_globals_yml.stat.exists
+
+- name: check /etc/kolla/passwords.yml file
+  stat:
+    path: /etc/kolla/passwords.yml
+  register: check_passwords_yml
+
+- block:
+    - name: copy the empty passwords to /etc/kolla
+      command: >-
+        tar xvf {{ kolla_ansible_path }} */etc/kolla/passwords.yml
+        --strip-components 3
+      args:
+        chdir: /etc/kolla
+        warn: false
+
+    - name: generate passwords.yml file
+      command: kolla-genpwd
+  when:
+    - not check_passwords_yml.stat.exists
+
+- import_tasks: "custom-config.yml"

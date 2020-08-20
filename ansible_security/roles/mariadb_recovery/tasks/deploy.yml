@@ -1,0 +1,28 @@
+---
+- name: Create /opt/ops folder
+  file:
+    path: /opt/ops
+    state: directory
+    mode: '0755'
+
+- name: copy /opt/ops/recovery.sh file
+  copy:
+    src: recovery.sh
+    dest: /opt/ops/recovery.sh
+    mode: '0770'
+
+- name: copy mariadbops.service file
+  copy:
+    src: mariadbops.service
+    dest: /usr/lib/systemd/system/mariadbops.service
+
+- name: reload service mariadbops
+  systemd:
+    name: mariadbops
+    state: reloaded
+
+- name: enable service mariadbops
+  systemd:
+    name: mariadbops
+    enabled: yes
+    masked: no

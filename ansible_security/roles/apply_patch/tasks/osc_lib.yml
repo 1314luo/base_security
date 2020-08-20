@@ -1,0 +1,6 @@
+---
+- name: apply Allow-to-use-the-none-auth-plugin.patch for osc_lib
+  patch:
+    src: Allow-to-use-the-none-auth-plugin.patch
+    basedir: /usr/lib/python2.7/site-packages
+    strip: 1

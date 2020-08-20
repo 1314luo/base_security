@@ -1,0 +1,25 @@
+# permit root login
+permit_root_login: "no"
+
+# host allow
+hosts_allow:
+  vsftpd:
+    - 172.*.*.*
+    - 192.168.*.*
+  sshd:
+    - 172.*.*.*
+    - 192.168.*.*
+  telnetd:
+    - 172.*.*.*
+    - 192.168.*.*
+  tftp:
+    - 172.*.*.*
+    - 192.168.*.*
+
+# host deny
+hosts_deny:
+  all:
+    - all
+
+# ssh timeout
+ssh_timeout: 300

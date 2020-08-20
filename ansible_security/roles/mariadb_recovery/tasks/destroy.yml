@@ -1,0 +1,32 @@
+---
+- name: check /opt/ops/recovery.sh existent
+  stat:
+    path: /usr/lib/systemd/system/mariadbops.service
+  register: check_mariadbops_service
+
+- name: disabled service mariadbops
+  systemd:
+    name: mariadbops
+    enabled: no
+    masked: no
+
+- name: remove mariadbops.service file
+  file:
+    path: /usr/lib/systemd/system/mariadbops.service
+    state: absent
+    force: yes
+  when:
+    - check_mariadbops_service.stat.exists
+
+- name: check /opt/ops/recovery.sh existent
+  stat:
+    path: /opt/ops/recovery.sh
+  register: check_recovery_script
+
+- name: remove /opt/ops/recovery.sh file
+  file:
+    path: /opt/ops/recovery.sh
+    state: absent
+    force: yes
+  when:
+    - check_recovery_script.stat.exists

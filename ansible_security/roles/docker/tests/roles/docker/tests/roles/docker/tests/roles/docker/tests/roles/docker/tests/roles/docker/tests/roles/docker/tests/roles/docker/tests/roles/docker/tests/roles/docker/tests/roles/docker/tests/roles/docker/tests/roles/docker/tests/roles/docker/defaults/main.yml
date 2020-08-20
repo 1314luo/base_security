@@ -1,0 +1,13 @@
+---
+mount_flags: shared
+
+log_driver: journald
+
+daemon_json:
+  storage-driver: overlay2
+  registry-mirrors:
+    - https://registry.docker-cn.com/
+  log-driver: "{{ log_driver }}"
+  insecure-registries:
+    - 0.0.0.0/0
+    - ::/0

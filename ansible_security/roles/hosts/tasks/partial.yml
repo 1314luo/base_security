@@ -1,0 +1,31 @@
+---
+- name: ensure 127.0.0.1 localhost
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127.0.0.1.*'
+    line: '127.0.0.1 localhost localhost4'
+    create: true
+
+- name: ensure ::1 localhost
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^::1'
+    line: '::1 localhost localhost6'
+
+- name: remove unexpected 127.0.0.1 line
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127.0.0.1\s(?!localhost).+'
+    state: absent
+
+- name: manage ansible inventory files
+  blockinfile:
+    path: /etc/hosts
+    block: "{{ lookup('template', 'hosts_inventory.j2') }}"
+    marker: "# {mark} ANSIBLE MANAGED INVENTORY HOSTS"
+
+- name: manage hosts from custom variable
+  blockinfile:
+    path: /etc/hosts
+    block: "{{ lookup('template', 'hosts_custom.j2') }}"
+    marker: "# {mark} ANSIBLE MANAGED CUSTOM HOSTS"

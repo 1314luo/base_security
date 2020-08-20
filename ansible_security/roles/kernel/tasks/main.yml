@@ -1,0 +1,6 @@
+---
+- name: update kernel
+  import_tasks: update_kernel.yml
+  when:
+    - kernel_type != "keep"
+

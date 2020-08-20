@@ -1,0 +1,36 @@
+# nic1 ---> [internal address]
+# nic2 ---> [storage address]
+# nic3 ---> br-ex ---> [tenant]
+---
+network_config:
+  # Internal Network
+  - type: interface
+    name: nic1
+    use_dhcp: false
+    use_dhcpv6: false
+    mtu: {{internal_mtu|int}}
+    addresses:
+      - ip_netmask: "{{internal_address}}/{{internal_prefix}}"
+{% if internal_gateway %}
+    routes:
+      - ip_netmask: "0.0.0.0/0"
+        next_hop: "{{ internal_gateway }}"
+        default: true
+{% endif %}
+
+  # Storage Network
+  - type: interface
+    name: nic1
+    use_dhcp: false
+    use_dhcpv6: false
+    mtu: {{storage_mtu|int}}
+    addresses:
+      - ip_netmask: "{{storage_address}}/{{storage_prefix}}"
+
+  # Config Tenant Network
+  - type: ovs_bridge
+    name: br-ex
+    use_dhcp: false
+    members:
+      - type: interface
+        name: nic2

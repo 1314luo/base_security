@@ -1,0 +1,13 @@
+---
+- name: check where ansible is installed
+  stat:
+    path: /usr/lib/python2.7/site-packages/ansible
+  register: check_ansible
+
+- name: apply ansible ironic patch
+  patch:
+    src: ansible_ironic.patch
+    basedir: /usr/lib/python2.7/site-packages
+    strip: 2
+  when:
+    - check_ansible.stat.exists

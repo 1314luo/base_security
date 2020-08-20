@@ -1,0 +1,4 @@
+---
+- name: configure timezone for system
+  timezone:
+    name: "{{ timezone }}"

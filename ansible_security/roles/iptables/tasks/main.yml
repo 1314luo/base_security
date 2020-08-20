@@ -1,0 +1,41 @@
+---
+- name: install iptables services
+  yum:
+    name: iptables-services
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+
+- name: ensure iptable assemble directory
+  file:
+    path: "{{ iptables_fragments_folder }}"
+    state: directory
+
+- name: empty fragment folder file
+  shell: |
+    #!/bin/bash -e
+    rm -rf {{ iptables_fragments_folder }}/*
+
+- name: enable service iptables
+  systemd:
+    name: "{{ iptables_cmd }}"
+    state: started
+    enabled: true
+
+- name: flush handlers
+  meta: flush_handlers
+
+- include_tasks: "rules.yml"
+  vars:
+    order: "00"
+    name: filter-header
+    content: "{{ lookup('template', 'filter-header.j2') }}"
+    comment: filter-header
+    reload: false
+
+- include_tasks: "rules.yml"
+  vars:
+    order: 29
+    name: filter-footer
+    content: "{{ lookup('template', 'filter-footer.j2') }}"
+    comment: filter-footer
+    reload: true

@@ -1,0 +1,23 @@
+---
+custom_config_overwrite: true
+custom_config_files:
+  - cinder.conf
+  - galera.cnf
+  - global.conf
+  - heat.conf
+  - keystone.conf
+  - neutron.conf
+  - nova.conf
+  - neutron/ml2_conf.ini
+########
+# nova #
+########
+nova_cpu_allocation_ratio: 2.0
+nova_ram_allocation_ratio: 1.0
+nova_reserved_host_disk_mb: 2048
+nova_reserved_host_memory_mb: 2048
+
+###########
+# neutron #
+###########
+neutron_network_vlan_ranges: physnet1:1000:2000

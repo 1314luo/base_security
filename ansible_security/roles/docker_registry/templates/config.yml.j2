@@ -1,0 +1,12 @@
+---
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  cache:
+    layerinfo: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: :{{ docker_registry_port }}

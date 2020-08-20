@@ -1,0 +1,19 @@
+---
+- name: check /etc/ansible/hosts file
+  stat:
+    path: /etc/ansible/hosts
+  register: check_ansible_hosts
+
+- name: delete the /etc/ansible/hosts file
+  file:
+    path: /etc/ansible/hosts
+    state: absent
+  when:
+    - check_ansible_hosts.stat.exists
+    - check_ansible_hosts.stat.isreg
+
+- name: ensure /etc/ansible/hosts is a folder
+  file:
+    path: /etc/ansible/hosts
+    state: directory
+    recurse: true

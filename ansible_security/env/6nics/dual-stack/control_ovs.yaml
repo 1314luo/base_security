@@ -1,0 +1,133 @@
+---
+# nic1 \                 / [control address]
+#       +---br_bond1 ---+ -- vlan{{internal_vlanid}} [internal_address}}
+# nic2 /  (linux bridge)  \ vlan{{public_vlanid}} [public_address}}
+#
+# nic3 \                  / vlan{{storage_vlanid}} [storage_address]
+#       +--- br_bond2 --->
+# nic4 /  (linux bridge)  \ vlan{{storagemgmt_vlanid}} [storagemgmt_address}
+#
+# nic5 \
+#       +--- br-ex
+# nic6 /  (ovs)
+
+network_config:
+  # Config Control Network Bond
+  - type: linux_bridge
+    name: br_bond1
+    use_dhcp: false
+    mtu: {{ control_mtu|int }}
+    members:
+      - type: linux_bond
+        name: bond1
+        mtu: {{ control_mtu|int }}
+        bonding_options: mode=1 miimon=100
+        members:
+          - type: interface
+            name: nic1
+            mtu: {{ control_mtu|int }}
+            primary: true
+          - type: interface
+            name: nic2
+            mtu: {{ control_mtu|int }}
+    addresses:
+{% for subnet in [control_subnet]|flatten %}
+      - ip_netmask: {{ subnet|ipmath(node_id) }}/{{ subnet|ipaddr('prefix') }}
+{% endfor %}
+    routes:
+{% for gateway in control_gateway|ipv4 %}
+      - ip_netmask: "0.0.0.0/0"
+        next_hop: "{{ gateway }}"
+        default: true
+{% endfor %}
+{% for gateway in control_gateway|ipv6 %}
+      - ip_netmask: "::/0"
+        next_hop: "{{ gateway }}"
+        default: true
+{% endfor %}
+
+  # Config InternalApi Network VlanID
+  - type: vlan
+    vlan_id: {{ internal_vlanid | int }}
+    device: br_bond1
+    mtu: {{ internal_mtu | int }}
+    addresses:
+{% for subnet in [internal_subnet]|flatten %}
+      - ip_netmask: {{ subnet|ipmath(node_id) }}/{{ subnet|ipaddr('prefix') }}
+{% endfor %}
+
+  # Config Public Network VlanID
+  - type: vlan
+    vlan_id: {{ public_vlanid | int }}
+    device: br_bond1
+    mtu: {{ public_mtu | int }}
+    addresses:
+{% for subnet in [public_subnet]|flatten %}
+      - ip_netmask: {{ subnet|ipmath(node_id) }}/{{ subnet|ipaddr('prefix') }}
+{% endfor %}
+    routes:
+{% for subnet, gateway in [public_subnet]|flatten|zip([public_gateway]|flatten) %}
+      - ip_netmask: "{{ subnet }}"
+        next_hop: "{{ gateway }}"
+        default: true
+{% endfor %}
+
+  # Config Storage Network Bond
+  - type: linux_bridge
+    name: br_bond2
+    use_dhcp: false
+    mtu: {{ storage_mtu | int }}
+    members:
+      - type: linux_bond
+        name: bond2
+        mtu: {{ storage_mtu | int }}
+        bonding_options: mode=1 miimon=100
+        members:
+          - type: interface
+            name: nic3
+            mtu: {{ storage_mtu | int }}
+            primary: true
+          - type: interface
+            name: nic4
+            mtu: {{ storage_mtu | int }}
+    dns_servers: []
+    domain: []
+
+  # Config StorageMgmt Network VlanID
+  - type: vlan
+    vlan_id: {{ storagemgmt_vlanid | int }}
+    device: br_bond2
+    mtu: {{ storagemgmt_mtu | int }}
+    addresses:
+{% for subnet in [storagemgmt_subnet]|flatten %}
+      - ip_netmask: {{ subnet|ipmath(node_id) }}/{{ subnet|ipaddr('prefix') }}
+{% endfor %}
+
+  # Config Storage Network VlanID
+  - type: vlan
+    vlan_id: {{ storage_vlanid | int }}
+    device: br_bond2
+    mtu: {{ storage_mtu | int }}
+    addresses:
+{% for subnet in [storage_subnet]|flatten %}
+      - ip_netmask: {{ subnet|ipmath(node_id) }}/{{ subnet|ipaddr('prefix') }}
+{% endfor %}
+
+  # Config Tenant Network Bond
+  - type: ovs_bridge
+    name: br-ex
+    use_dhcp: false
+    mtu: {{tenant_mtu|int}}
+    members:
+      - type: ovs_bond
+        name: bond3
+        mtu: {{tenant_mtu|int}}
+        ovs_options: "bond_mode=active-backup other_config:bond-miimon-interval=100"
+        members:
+          - type: interface
+            name: nic5
+            mtu: {{tenant_mtu|int}}
+            primary: true
+          - type: interface
+            name: nic6
+            mtu: {{tenant_mtu|int}}

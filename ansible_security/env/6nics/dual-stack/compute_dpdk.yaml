@@ -1,0 +1,121 @@
+---
+# nic1 \                 / [control address]
+#       +---br_bond1 ---+
+# nic2 /  (linux bridg)  \ vlan{{internal_vlanid}} [internal_address}}
+#
+# nic3 \                  / vlan{{storage_vlanid}} [storage_address]
+#       +--- br_bond2 --->
+# nic4 /  (linux bridge)  \ vlan{{storagemgmt_vlanid}} [storagemgmt_address}
+#
+# nic5 \
+#       +--- br-ex
+# nic6 /  (ovs dpdk)
+
+network_config:
+  # Config Control Network Bond
+  - type: linux_bridge
+    name: br_bond1
+    use_dhcp: false
+    mtu: {{ control_mtu|int }}
+    members:
+      - type: linux_bond
+        name: bond1
+        mtu: {{ control_mtu|int }}
+        bonding_options: mode=1 miimon=100
+        members:
+          - type: interface
+            name: nic1
+            mtu: {{ control_mtu|int }}
+            primary: true
+          - type: interface
+            name: nic2
+            mtu: {{ control_mtu|int }}
+    addresses:
+{% for address, prefix in control_address|zip(control_prefix) %}
+      - ip_netmask: {{ address }}/{{ prefix }}
+{% endfor %}
+    routes:
+{% for gateway in control_gateway|ipv4 %}
+      - ip_netmask: "0.0.0.0/0"
+        next_hop: "{{ gateway }}"
+        default: true
+{% endfor %}
+{% for gateway in control_gateway|ipv6 %}
+      - ip_netmask: "::/0"
+        next_hop: "{{ gateway }}"
+        default: true
+{% endfor %}
+
+
+  # Config InternalApi Network VlanID
+  - type: vlan
+    vlan_id: {{ internal_vlanid | int }}
+    device: br_bond1
+    mtu: {{ mtu | int }}
+    addresses:
+{% for address, prefix in internal_address|zip(internal_prefix) %}
+      - ip_netmask: {{ address }}/{{ prefix }}
+{% endfor %}
+
+  # Config Storage Network Bond
+  - type: linux_bridge
+    name: br_bond2
+    use_dhcp: false
+    mtu: {{ storage_mtu | int }}
+    members:
+      - type: linux_bond
+        name: bond2
+        mtu: {{ storage_mtu | int }}
+        bonding_options: mode=1 miimon=100
+        members:
+          - type: interface
+            name: nic3
+            mtu: {{ storage_mtu | int }}
+            primary: true
+          - type: interface
+            name: nic4
+            mtu: {{ storage_mtu | int }}
+    dns_servers: []
+    domain: []
+
+  # Config StorageMgmt Network VlanID
+  - type: vlan
+    vlan_id: {{ storagemgmt_vlanid | int }}
+    device: br_bond2
+    mtu: {{ storagemgmt_mtu | int }}
+    addresses:
+{% for address, prefix in storagemgmt_address|zip(storagemgmt_prefix) %}
+      - ip_netmask: {{ address }}/{{ prefix }}
+{% endfor %}
+
+  # Config Storage Network VlanID
+  - type: vlan
+    vlan_id: {{ storage_vlanid | int }}
+    device: br_bond2
+    mtu: {{ storage_mtu | int }}
+    addresses:
+{% for address, prefix in storage_address|zip(storage_prefix) %}
+      - ip_netmask: {{ address }}/{{ prefix }}
+{% endfor %}
+
+  # Config Tenant Network Bond
+  - type: ovs_user_bridge
+    name: br-ex
+    members:
+      - type: ovs_dpdk_bond
+        name: dpdkbond0
+        mtu: {{ tenant_mtu | int }}
+        rx_queue: 4
+        members:
+          - type: ovs_dpdk_port
+            name: dpdk0
+            driver: "{{ dpdk_driver }}"
+            members:
+              - type: interface
+                name: nic5
+          - type: ovs_dpdk_port
+            name: dpdk1
+            driver: "{{ dpdk_driver }}"
+            members:
+              - type: interface
+                name: nic6

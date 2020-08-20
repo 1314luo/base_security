@@ -1,0 +1,109 @@
+---
+- hosts: all
+  vars:
+    yum_disablerepo: "*"
+    yum_enablerepo: local
+    ict_globals_yml: /etc/ict/globals.yml
+  tasks:
+    - name: "include {{ ict_globals_yml }} file"
+      include_vars:
+        file: "{{ ict_globals_yml }}"
+      tags:
+        - always
+
+    - name: disable selinux
+      import_role:
+        name: disable_selinux
+      tags:
+        - selinux
+        - os
+
+    - name: disable firewalld
+      import_role:
+        name: disable_firewalld
+      tags:
+        - firewalld
+        - os
+
+    - name: disable chronyd
+      import_role:
+        name: disable_chronyd
+      tags:
+        - chronyd
+        - os
+
+    - name: set timezone
+      import_role:
+        name: timezone
+      tags:
+        - timezone
+        - os
+
+    - name: configure /etc/hosts
+      import_role:
+        name: hosts
+      tags:
+        - hosts
+        - os
+
+    - name: prepare http local repo
+      import_role:
+        name: httprepo
+      tags:
+        - repo
+
+    - name: install required packages
+      import_role:
+        name: install_packages
+      tags:
+        - package
+        - os
+
+    - name: config tuned profiler
+      import_role:
+        name: tuned
+      tags:
+        - tuned
+        - os
+
+    - name: update kernel
+      import_role:
+        name: kernel
+      tags:
+        - kernel
+        - os
+
+    - name: config docker-ce
+      import_role:
+        name: docker
+      tags:
+        - docker
+
+    - name: apply patches required
+      import_role:
+        name: apply_patch
+      tags:
+        - patch
+
+    - name: config openvswitch
+      import_role:
+        name: openvswitch
+      tags:
+        - openvswitch
+
+#    - name: config iptables
+#      import_role:
+#        name: iptables
+#      tags:
+#        - iptables
+#
+#    - name: config security
+#      import_role:
+#        name: security
+#      tags:
+#        - security
+#    - name: configure network
+#      import_role:
+#        name: network
+#      tags:
+#        - network

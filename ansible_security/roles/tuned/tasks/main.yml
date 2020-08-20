@@ -1,0 +1,39 @@
+---
+- name: install tuned package
+  yum:
+    name:
+      - tuned
+      - tuned-profiles-cpu-partitioning
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+
+- name: copy tuned profiles
+  synchronize:
+    src: "{{ role_path }}/files/tuned/"
+    dest: "/etc/tuned/"
+
+- name: copy default ict-variables.conf file
+  template:
+    src: ict-variables.conf
+    dest: /etc/tuned/ict-variables.conf
+  notify:
+    - restart tuned
+
+- name: ensure the tuned active profile
+  command: tuned-adm active
+  become: true
+  changed_when: false
+  register: tuned_active_profile
+
+- name: Tune-d profile activation
+  shell: tuned-adm profile {{ tuned_profile }}
+  become: true
+  when:
+   - tuned_profile not in tuned_active_profile.stdout_lines[0]
+
+- name: Set reboot required fact
+  set_fact:
+    reboot_required: true
+  become: true
+  when:
+   - tuned_profile not in tuned_active_profile.stdout_lines[0]

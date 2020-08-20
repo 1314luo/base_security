@@ -1,0 +1,12 @@
+---
+network_config:
+  - type: linux_bond
+    name: bond1
+    use_dhcp: true
+    bonding_options: "mode=active-backup miimon=100"
+    # bonding_options: "mode=4 miimon=100 lacp_rate=1"
+    members:
+      - type: interface
+        name: eth0
+      - type: interface
+        name: eth1

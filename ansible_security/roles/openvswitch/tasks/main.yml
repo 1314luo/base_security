@@ -1,0 +1,80 @@
+---
+- name: Install Open vSwitch and DPDK
+  yum:
+    name:
+      - openvswitch
+      - dpdk
+      - dpdk-tools
+      - libibverbs
+      - libmlx4
+      - rdma-core
+    state: present
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+  become: true
+
+- name: Start OpenvSwitch service
+  service:
+    name: openvswitch
+    state: started
+    enabled: true
+  become: true
+
+- name: Set OpenvSwitch Manager
+  shell: |
+    ovs-vsctl set-manager ptcp:6640:127.0.0.1
+  register: return_value
+  changed_when: false
+  failed_when: return_value.rc | int != 0
+
+- name: Initialize DPDK
+  openvswitch_db:
+    table: Open_vSwitch
+    record: .
+    col: other_config
+    key: dpdk-init
+    value: "true"
+    state: "{{ 'present' if enable_ovs_dpdk | bool else 'absent' }}"
+  become: true
+  notify:
+    - restart openvswitch
+  when: enable_ovs_dpdk | bool
+
+- name: Specify the hugepage  memory of the DPDK
+  openvswitch_db:
+    table: Open_vSwitch
+    record: .
+    col: other_config
+    key: dpdk-socket-mem
+    value: "{{ dpdk_socket_mem }}"
+    state: "{{ 'present' if enable_ovs_dpdk | bool else 'absent' }}"
+  become: true
+  notify:
+    - restart openvswitch
+  when: enable_ovs_dpdk | bool
+
+- name: Specify the logical core used by DPDK
+  openvswitch_db:
+    table: Open_vSwitch
+    record: .
+    col: other_config
+    key: dpdk-lcore-mask
+    value: "{{ dpdk_lcore_mask }}"
+    state: "{{ 'present' if enable_ovs_dpdk | bool else 'absent' }}"
+  become: true
+  notify:
+    - restart openvswitch
+  when: enable_ovs_dpdk | bool
+
+- name: Set the CPU affinity of PMD thread
+  openvswitch_db:
+    table: Open_vSwitch
+    record: .
+    col: other_config
+    key: pmd-cpu-mask
+    value: "{{ pmd_cpu_mask }}"
+    state: "{{ 'present' if enable_ovs_dpdk | bool else 'absent' }}"
+  become: true
+  notify:
+    - restart openvswitch
+  when: enable_ovs_dpdk | bool

@@ -1,0 +1,138 @@
+---
+- hosts: all
+  vars:
+    offline_mode: true
+    data_path: /data
+    package_path: /data
+    http_port: 7080
+    https_port: 7443
+    yum_disablerepo: '*'
+    yum_enablerepo: '_local'
+    ict_globals_yml: /etc/ict/globals.yml
+  handlers:
+    - name: restart httpd service
+      systemd:
+        name: httpd
+        state: restarted
+  tasks:
+    - name: "include {{ ict_globals_yml }} file"
+      include_vars:
+        file: "{{ ict_globals_yml }}"
+      tags:
+        - always
+
+    - name: disable selinux
+      import_role:
+        name: disable_selinux
+      tags:
+        - selinux
+
+    - name: disable firewalld
+      import_role:
+        name: disable_firewalld
+      tags:
+        - firewalld
+        - os
+
+    # install httpd
+    - name: install httpd
+      import_role:
+        name: httpd
+
+    - name: copy httpd repo.conf file
+      copy:
+        content: |
+          Alias /repo /data/repo
+          <Directory "/data/repo">
+            Options +Indexes
+            AllowOverride all
+            Order allow,deny
+            Allow from all
+            Require all granted
+          </Directory>
+        dest: /etc/httpd/conf.d/repo.conf
+      notify:
+        - restart httpd service
+
+    # trigger restart httpd service
+    - name: flush handlers
+      meta: flush_handlers
+
+    - import_role:
+        name: httprepo
+
+    - name: install required packages
+      import_role:
+        name: install_packages
+      tags:
+        - os
+
+    - name: prepare ansible
+      import_role:
+        name: ansible
+      tags:
+        - ansible
+
+    - name: ensure ssh keypair
+      import_role:
+        name: ssh_keypair
+      tags:
+        - os
+        - ssh
+
+    # install docker
+    - name: install docker-ce
+      import_role:
+        name: docker
+
+    - name: apply patches required
+      import_role:
+        name: apply_patch
+      tags:
+        - patch
+
+    - name: start docker registry container
+      import_role:
+        name: docker_registry
+      tags:
+        - registry
+
+    # unarchive projects
+    - name: unarchive minironic project
+      unarchive:
+        src: "{{ package_path }}/minironic.tar.gz"
+        dest: /root/
+      tags:
+        - unarchive
+
+    - name: unarchive ict-ansible project
+      unarchive:
+        src: "{{ package_path }}/ict-ansible.tar.gz"
+        dest: /root/
+      tags:
+        - unarchive
+
+    - name: unarchive prometheus-ansible project
+      unarchive:
+        src: "{{ package_path }}/prometheus-ansible.tar.gz"
+        dest: "/root/"
+      tags:
+        - unarchive
+
+    - name: init kolla-ansible
+      import_role:
+        name: kolla_ansible
+      tags:
+        - kolla
+
+    - name: init ansible-prometheus
+      import_role:
+        name: init-ansible-prometheus
+      tags:
+        - prometheus
+
+    - name: init backupclient
+      import_role:
+        name: backupclient
+      tags:
+        - backupclient

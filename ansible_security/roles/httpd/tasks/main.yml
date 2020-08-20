@@ -1,0 +1,19 @@
+---
+- name: install httpd package
+  yum:
+    name:
+      - httpd
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+
+- name: change default port
+  include_tasks: "change_default_port.yml"
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: ensure httpd service is enabled and started
+  systemd:
+    name: httpd
+    enabled: true
+    state: started

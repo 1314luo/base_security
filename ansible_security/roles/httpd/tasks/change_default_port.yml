@@ -1,0 +1,30 @@
+---
+- name: check whether httpd.conf exist
+  stat:
+    path: /etc/httpd/conf/httpd.conf
+  register: check_httpd_conf
+
+- name: disable 80 port on httpd.conf file
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^Listen 80'
+    line: "Listen {{ http_port }}"
+  when:
+    - check_httpd_conf.stat.exists
+  notify:
+    - restart httpd service
+
+- name: check whether ssl.conf exist
+  stat:
+    path: /etc/httpd/conf.d/ssl.conf
+  register: check_ssl_conf
+
+- name: change https port in httpd.conf file
+  lineinfile:
+    path: /etc/httpd/conf.d/ssl.conf
+    regexp: '^Listen 443'
+    line: "# Listen {{ https_port }}"
+  when:
+    - check_ssl_conf.stat.exists
+  notify:
+    - restart httpd service

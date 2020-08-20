@@ -1,0 +1,73 @@
+---
+# nic1 \
+#       +---ovs_bond0 ---> [internal_address]
+# nic2 /   (ovs bond)
+#
+# nic3 \
+#       +---ovs_bond2 ---> [storage_address]
+# nic4 /   (ovs bond)
+#
+# nic5 \
+#       +--- br-ex ---> [tenant]
+# nic6 /   (ovs bond)
+
+network_config:
+  # Config Internal Network
+  - type: ovs_bridge
+    name: ovs_bond0
+    use_dhcp: false
+    members:
+      - type: ovs_bond
+        name: bond0
+        use_dhcp: false
+        members:
+          - type: interface
+            name: nic1
+          - type: interface
+            name: nic2
+    addresses:
+      - ip_netmask: "{{ internal_address }}/{{ internal_prefix }}"
+{% if internal_gateway|bool %}
+    routes:
+      - ip_netmask: 0.0.0.0/0
+        next_hop: "{{ internal_gateway }}"
+        default: 'true'
+{% endif %}
+
+  # Config Storage Network
+  - type: ovs_bridge
+    name: ovs_bond1
+    use_dhcp: false
+    members:
+      - type: ovs_bond
+        name: bond1
+        use_dhcp: false
+        members:
+          - type: interface
+            name: nic3
+          - type: interface
+            name: nic4
+    addresses:
+      - ip_netmask: "{{ storage_address }}/{{ storage_prefix }}"
+
+  # Config Tenant DPDK Network
+  - type: ovs_user_bridge
+    name: br-ex
+    members:
+      - type: ovs_dpdk_bond
+        name: dpdkbond0
+        mtu: {{ tenant_mtu }}
+        rx_queue: 4
+        members:
+          - type: ovs_dpdk_port
+            name: dpdk0
+            driver: "{{ dpdk_driver }}"
+            members:
+              - type: interface
+                name: nic5
+          - type: ovs_dpdk_port
+            name: dpdk1
+            driver: "{{ dpdk_driver }}"
+            members:
+              - type: interface
+                name: nic6

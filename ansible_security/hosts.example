@@ -1,0 +1,20 @@
+[all:vars]
+mtu=1500
+
+[control:vars]
+os_net_config_yaml={{ playbook_dir }}/env/control_network.yaml
+interface_mapping_yaml={{ playbook_dir }}/env/network_mapping.yaml
+
+[compute:vars]
+os_net_config_yaml={{ playbook_dir }}/env/compute_dpdk.yaml
+interface_mapping_yaml={{ playbook_dir }}/env/network_mapping.yaml
+enable_dpdk=true
+
+[control]
+control01  node_id=1
+control02  node_id=2
+control03  node_id=3
+
+[compute]
+compute01  node_id=4
+compute02  node_id=5

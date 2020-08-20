@@ -1,0 +1,73 @@
+---
+# nic1 ---> [control_address]
+# nic2 ---> [internal_address}}
+# nic3 ---> [storage_address]
+# nic4 ---> [storagemgmt_address}
+# nic5 ---> br-ex --> [tenant]
+
+network_config:
+  # Config Control Network
+  - type: interface
+    name: "nic1"
+    use_dhcp: false
+    use_dhcpv6: false
+    mtu: {{control_mtu|int}}
+    addresses:
+      - ip_netmask: "{{ control_address }}/{{ control_prefix }}"
+{% if control_gateway %}
+    routes:
+      - ip_netmask: "0.0.0.0/0"
+        next_hop: "{{ control_gateway }}"
+        default: true
+{% endif %}
+
+  # Config Internal Network
+  - type: interface
+    name: "nic2"
+    use_dhcp: false
+    use_dhcpv6: false
+    mtu: {{internal_mtu|int}}
+    addresses:
+      - ip_netmask: "{{ internal_address }}/{{ control_prefix }}"
+{% if internal_gateway %}
+      - ip_netmask: "0.0.0.0/0"
+        next_hop: "{{ internal_gateway }}"
+        default: true
+{% endif %}
+
+  # Config storage Network
+  - type: interface
+    name: "nic3"
+    use_dhcp: false
+    use_dhcpv6: false
+    mtu: {{storage_mtu|int}}
+    addresses:
+      - ip_netmask: "{{ storage_address }}/{{ control_prefix }}"
+{% if storage_gateway %}
+      - ip_netmask: "{{ storage_subnet }}"
+        next_hop: "{{ storage_gateway }}"
+        default: true
+{% endif %}
+
+  # Config storagemgmt Network
+  - type: interface
+    name: "nic4"
+    use_dhcp: false
+    use_dhcpv6: false
+    mtu: {{storagemgmt_mtu|int}}
+    addresses:
+      - ip_netmask: "{{ storagemgmt_address }}/{{ control_prefix }}"
+{% if storagemgmt_gateway %}
+      - ip_netmask: "0.0.0.0/0"
+        next_hop: "{{ storagemgmt_gateway }}"
+        default: true
+{% endif %}
+
+  # Config Tenant Network
+  - type: ovs_bridge
+    name: br-ex
+    use_dhcp: false
+    mtu: {{tenant_mtu|int}}
+    members:
+      - type: interface
+        name: nic5

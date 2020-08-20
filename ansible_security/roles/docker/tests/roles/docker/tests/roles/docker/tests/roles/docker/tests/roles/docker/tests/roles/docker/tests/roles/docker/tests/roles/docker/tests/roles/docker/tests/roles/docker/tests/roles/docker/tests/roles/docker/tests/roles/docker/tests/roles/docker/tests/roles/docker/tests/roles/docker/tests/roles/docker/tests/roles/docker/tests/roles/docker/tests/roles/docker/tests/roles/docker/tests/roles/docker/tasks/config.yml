@@ -1,0 +1,28 @@
+---
+- name: ensure /etc/docker folder
+  file:
+    path: /etc/docker
+    state: directory
+  notify:
+    - restart docker service
+
+- name: copy daemon.json file
+  template:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+  notify:
+    - restart docker service
+
+- name: ensure docker systemd overwrite folder
+  file:
+    path: /etc/systemd/system/docker.service.d/
+    state: directory
+
+- name: copy overwrite.conf file
+  copy:
+    content: |
+      [Service]
+      MountFlags={{ mount_flags }}
+    dest: /etc/systemd/system/docker.service.d/overwrite.conf
+  notify:
+    - restart docker service

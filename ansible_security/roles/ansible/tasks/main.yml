@@ -1,0 +1,34 @@
+---
+- name: install ansible package
+  yum:
+    name:
+      - ansible
+      - python2-jinja2
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+    update_cache: true
+
+- name: copy /etc/ansible/ansible.cfg file
+  template:
+    src: ansible.cfg.j2
+    dest: /etc/ansible/ansible.cfg
+
+- import_tasks: ensure_hosts.yml
+
+- name: check /etc/ansible/hosts/00-nodes file
+  stat:
+    path: /etc/ansible/hosts/00-nodes
+  register: check_nodes
+
+- name: copy /etc/ansible/hosts/00-nodes file
+  template:
+    src: 00-nodes
+    dest: /etc/ansible/hosts/00-nodes
+  when:
+    - not check_nodes.stat.exists
+
+- name: ensure /var/log/ansible folder
+  file:
+    path: /var/log/ansible
+    state: directory
+    recurse: true

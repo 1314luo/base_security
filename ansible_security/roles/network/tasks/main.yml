@@ -1,0 +1,77 @@
+---
+- name: Install os-net-config and bridge-utils packages
+  yum:
+    name:
+      - os-net-config
+      - bridge-utils
+      - driverctl
+    state: present
+    disablerepo: "{{ yum_disablerepo|default(omit) }}"
+    enablerepo: "{{ yum_enablerepo|default(omit) }}"
+  become: true
+
+- name: Ensuring config directories exist
+  file:
+    path: "{{ item }}"
+    state: "directory"
+    recurse: true
+  with_items:
+    - "/etc/os-net-config"
+    - "/var/lib/os-net-config"
+
+- name: copy default config.yaml file
+  template:
+    src: "{{ os_net_config_yaml|default('config.yaml') }}"
+    dest: /etc/os-net-config/config.yaml
+
+- name: copy default mapping.yaml file
+  template:
+    src: "{{ interface_mapping_yaml|default('mapping.yaml') }}"
+    dest: /etc/os-net-config/mapping.yaml
+
+- name: config network by os-net-config
+  shell: |
+    os-net-config -c /etc/os-net-config/config.yaml -m /etc/os-net-config/mapping.yaml
+  when:
+    - not enable_network_container | bool
+
+- name: install os-net-config container
+  docker_container:
+    name: os-net-config
+    privileged: true
+    network_mode: host
+    image: "{{ os_net_config_image_full }}"
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/os-net-config/:/etc/os-net-config/"
+      - "/etc/driverctl.d:/etc/driverctl.d"
+      - "/etc/sysconfig/:/etc/sysconfig/:rw"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run/:/run/"
+      - "/sys:/sys"
+      - "/var/lib/os-net-config:/var/lib/os-net-config"
+    command: os-net-config
+    state: started
+  become: true
+  when: enable_network_container | bool
+
+- name: wait for os-net-config config network
+  shell: |
+    sleep 30s
+  changed_when: false
+
+- name: test ipv4 network connection
+  shell: |
+    ping -c 3  "{{ item }}"
+  with_items: "{{ ansible_all_ipv4_addresses }}"
+  changed_when: false
+  delegate_to: "{{ groups.control.0 }}"
+  when: enable_network_check | bool
+
+- name: test ipv6 network connection
+  shell: |
+    ping6 -c 3 "{{ item }}"
+  with_items: "{{ ansible_all_ipv6_addresses | reject('match', 'fe80') | list }}"
+  changed_when: false
+  delegate_to: "{{ groups.control.0 }}"
+  when: enable_network_check | bool

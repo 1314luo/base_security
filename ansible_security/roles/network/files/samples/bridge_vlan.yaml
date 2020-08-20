@@ -1,0 +1,16 @@
+---
+network_config:
+  - type: ovs_bridge
+    name: br-ctlplane
+    use_dhcp: true
+    members:
+      - type: interface
+        name: eth0
+      - type: vlan
+        vlan_id: 16
+      - foo: bar
+        addresses:
+      - ip_netmask: 192.0.2.1/24
+    routes:
+      - next_hop: 192.0.2.1
+        ip_netmask: 192.0.2.1/24
