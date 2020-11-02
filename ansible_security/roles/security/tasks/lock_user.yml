@@ -5,4 +5,9 @@
     - nfsnobody
     - adm
     - shutdown
+    - nobody 
+    - games
+    - operator
+    - halt
+    - lp
   ignore_errors: yes
