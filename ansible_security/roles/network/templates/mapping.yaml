@@ -1,7 +1,0 @@
-interface_mapping:
-  nic1: eth0
-  nic2: eth1
-  nic3: eth2
-  nic4: eth3
-  nic5: eth4
-  nic6: eth5

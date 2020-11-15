@@ -1,9 +1,0 @@
----
-enable_ovs_dpdk: false
-dpdk_socket_mem: ""
-
-dpdk_lcore_list: ""
-pmd_cpu_list: ""
-
-dpdk_lcore_mask: "{{ dpdk_lcore_list | cpu_mask }}"
-pmd_cpu_mask: "{{ pmd_cpu_list | cpu_mask }}"

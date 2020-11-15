@@ -1,7 +1,0 @@
----
-- name: install required packages
-  yum:
-    name: "{{ packages.values()|flatten }}"
-    disablerepo: "{{ yum_disablerepo|default(omit) }}"
-    enablerepo: "{{ yum_enablerepo|default(omit) }}"
-    update_cache: true

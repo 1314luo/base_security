@@ -1,7 +1,0 @@
----
-- name: configure /etc/hosts
-  import_tasks: "{{ hosts_method }}.yml"
-
-- name: set hostname
-  hostname:
-    name: "{{ default_domain_fqdn }}"

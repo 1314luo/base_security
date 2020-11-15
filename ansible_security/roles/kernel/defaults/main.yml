@@ -1,7 +1,0 @@
----
-kernel_type: keep
-kernel_versions:
-  realtime: "rt-3.10.0-957.21.3.rt56.935.el7"
-  stable: "3.10.0-957.27.2.el7"
-kernel_version: "{{ kernel_versions[kernel_type] }}"
-kernel_version_full: "{{ kernel_version }}.x86_64"

@@ -1,7 +1,0 @@
----
-# Valid options: [ partial, overwrite ]
-hosts_method: "overwrite"
-
-etc_hosts: {}
-# etc_hosts:
-#   hostname: ip
