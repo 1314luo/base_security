@@ -1,14 +1,5 @@
 ---
 - hosts: all
-#  remote_user: admin
-#  sudo: yes
-  # ansible_ssh_user: admin
-  # ansible_ssh_pass: Abc123..
-  # ansible_sudo_pass: Abc123...
-#  vars:
-#    yum_disablerepo: "*"
-#    yum_enablerepo: local
-#    ict_globals_yml: /etc/ict/globals.yml
   tasks:
     - name: config iptables
       import_role:
