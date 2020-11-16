@@ -19,7 +19,7 @@ permit_root_login: "no"
 hosts_deny: {ssh: {'192.168.1.*'}}
 
 # ssh timeout
-ssh_timeout: "300"
+ssh_timeout: "90"
 
 # ip version
 ip_version: "4"
