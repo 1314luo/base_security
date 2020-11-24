@@ -25,6 +25,14 @@
     dest: /etc/hosts.deny
   when: hosts_deny | length > 0
 
+- name: 修改目标主机SSH服务存在RC4、CBC或None弱加密算法
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - {regexp: '^#?Ciphers', line: 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr'}
+
 - name: sshbanner
   lineinfile:
     path: /etc/ssh/sshd_config
@@ -37,4 +45,3 @@
   register: sshd_config
 #  notify:
 #    - restart sshd service
-
