@@ -35,7 +35,7 @@
    path: /etc/motd
    line: "{{ item }}"
   with_items:
-   - 'Authorized users only. All activity may be monitored and reported'
+   - 'Warning!!! If you are not the operations staff, loggout the system right now'
 
 - name: 用PAM认证模块进行su权限控制
   lineinfile:
