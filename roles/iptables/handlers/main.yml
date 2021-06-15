@@ -1,0 +1,5 @@
+---
+- name: reload iptables service
+  systemd:
+    name: "{{ iptables_cmd }}"
+    state: restarted

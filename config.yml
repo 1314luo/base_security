@@ -1,0 +1,14 @@
+---
+- hosts: all
+  tasks:
+    - name: config iptables
+      import_role:
+        name: iptables
+      tags:
+        - iptables
+
+    - name: config security
+      import_role:
+        name: security
+      tags:
+        - security

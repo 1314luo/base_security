@@ -1,0 +1,5 @@
+---
+iptables_cmd: "{{ 'iptables' if ip_version|int == 4 else 'ip6tables' }}"
+iptables_fragments_folder: /etc/sysconfig/{{ iptables_cmd }}.fragments
+iptables_sysconfig_path: "/etc/sysconfig/{{ iptables_cmd }}"
+iptables_restore_cmd: "{{ iptables_cmd }}-restore"
